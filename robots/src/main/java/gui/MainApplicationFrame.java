@@ -67,13 +67,12 @@ public class MainApplicationFrame extends JFrame {
     }
     private void approveExitMenu()
     {
-        UIManager.put("OptionPane.yesButtonText"   , "Да"    );
-        UIManager.put("OptionPane.noButtonText"    , "Нет"   );
-        ConfirmInput ans = ConfirmInput.values()[(JOptionPane.showConfirmDialog(null,
-                "Выйти?",
-                "Подтверждение",
-                JOptionPane.YES_NO_OPTION))];
-        if(ans == ConfirmInput.YES)
+        Object[] options = { "Да", "Нет" };
+        ConfirmInput answer = ConfirmInput.values()[JOptionPane.showOptionDialog(null,
+                "Вы уверены, что хотите выйти?", "Выход", JOptionPane.DEFAULT_OPTION,
+                JOptionPane.DEFAULT_OPTION, null, options, options[0])];
+
+        if(answer == ConfirmInput.YES)
         {
             System.exit(0);
         }
