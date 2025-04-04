@@ -76,16 +76,13 @@ public class MainApplicationFrame extends JFrame {
     }
 
     private static ConfirmInput getSelectedConfirmInput() {
+        String[] titles = ConfirmInput.getTitles();
         int selectedIndex = JOptionPane.showOptionDialog(null,
                 "Вы уверены, что хотите выйти?", "Выход", JOptionPane.DEFAULT_OPTION,
-                JOptionPane.DEFAULT_OPTION, null, ConfirmInput.getValuesTranslated(),
-                ConfirmInput.getValuesTranslated()[0]);
+                JOptionPane.DEFAULT_OPTION, null, titles,
+                ConfirmInput.YES.getTitle());
 
-        ConfirmInput[] values = ConfirmInput.values();
-        if (selectedIndex >= 0 && selectedIndex < values.length) {
-            return values[selectedIndex];
-        }
-        return ConfirmInput.NO;
+        return ConfirmInput.values()[selectedIndex];
     }
 
     private JMenuBar generateMenuBar() {

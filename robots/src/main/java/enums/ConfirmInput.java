@@ -1,11 +1,25 @@
 package enums;
 
-import java.util.Arrays;
-
 public enum ConfirmInput {
-    YES, NO;
+    YES ("Да"),
+    NO ("Нет");
 
-    public static String[] getValuesTranslated() {
-        return new String[]{"Да", "Нет"};
+    private final String title;
+
+    ConfirmInput(String title) {
+        this.title = title;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public static String[] getTitles() {
+        ConfirmInput[] values = ConfirmInput.values();
+        String[] titles = new String[values.length];
+        for (int i = 0; i < values.length; i++) {
+            titles[i] = values[i].getTitle();
+        }
+        return titles;
     }
 }
