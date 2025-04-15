@@ -43,12 +43,18 @@ public class MainApplicationFrame extends JFrame {
         LogWindow logWindow = createLogWindow();
         addWindow(logWindow);
 
-        GameWindow gameWindow = new GameWindow();
-        gameWindow.setSize(400, 400);
+        GameWindow gameWindow = createGameWindow();
         addWindow(gameWindow);
 
         setJMenuBar(generateMenuBar());
         setDefaultCloseOperation(EXIT_ON_CLOSE);
+    }
+
+    protected GameWindow createGameWindow() {
+        GameWindow gameWindow = new GameWindow();
+        gameWindow.setSize(400, 400);
+        gameWindow.setName("Game");
+        return gameWindow;
     }
 
     protected LogWindow createLogWindow() {
@@ -56,6 +62,7 @@ public class MainApplicationFrame extends JFrame {
         logWindow.setLocation(10, 10);
         logWindow.setSize(300, 800);
         setMinimumSize(logWindow.getSize());
+        logWindow.setName("Logger");
         logWindow.pack();
         Logger.debug("Протокол работает");
         return logWindow;
@@ -68,9 +75,9 @@ public class MainApplicationFrame extends JFrame {
     private void approveExitMenu()
     {
         ConfirmInput answer = getSelectedConfirmInput();
-
         if(answer == ConfirmInput.YES)
         {
+            SavedState savedState = new SavedState(desktopPane.getAllFrames());
             System.exit(0);
         }
     }
