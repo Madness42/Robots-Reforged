@@ -1,11 +1,8 @@
 package gui;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.Serializable;
+import java.io.*;
 import javax.swing.*;
 import java.awt.*;
-import java.io.ObjectOutputStream;
 
 public class SavedState implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -23,13 +20,11 @@ public class SavedState implements Serializable {
     }
 
     public void saveFile() throws IOException {
-        FileOutputStream outputStream = new FileOutputStream("C:\\Users\\Username\\Desktop\\save.ser");
+        FileOutputStream outputStream = new FileOutputStream(System.getProperty("user.dir") + File.separator + "save.ser");
         ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
 
-        // сохраняем игру в файл
         objectOutputStream.writeObject(this);
 
-        //закрываем поток и освобождаем ресурсы
         objectOutputStream.close();
     }
 }

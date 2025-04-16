@@ -18,6 +18,7 @@ import enums.ConfirmInput;
 import log.Logger;
 import javax.swing.*;
 import java.awt.event.*;
+import java.io.IOException;
 
 /**
  * Что требуется сделать:
@@ -78,6 +79,12 @@ public class MainApplicationFrame extends JFrame {
         if(answer == ConfirmInput.YES)
         {
             SavedState savedState = new SavedState(desktopPane.getAllFrames());
+            try{
+                savedState.saveFile();
+            }
+            catch (IOException e){
+                System.out.println(e.getMessage());
+            }
             System.exit(0);
         }
     }
