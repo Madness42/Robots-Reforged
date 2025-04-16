@@ -18,9 +18,11 @@ import enums.ConfirmInput;
 import log.Logger;
 import javax.swing.*;
 import java.awt.event.*;
+
 import java.beans.PropertyVetoException;
 import java.io.IOException;
 import java.util.Objects;
+
 
 /**
  * Что требуется сделать:
@@ -30,7 +32,9 @@ import java.util.Objects;
  */
 public class MainApplicationFrame extends JFrame {
     private final JDesktopPane desktopPane = new JDesktopPane();
+
     private SavedState savedState;
+
 
     public MainApplicationFrame() {
         try {
@@ -55,6 +59,7 @@ public class MainApplicationFrame extends JFrame {
         addWindow(logWindow);
 
         GameWindow gameWindow = createGameWindow();
+
         addWindow(gameWindow);
 
         setJMenuBar(generateMenuBar());
