@@ -7,16 +7,19 @@ import java.awt.*;
 public class SavedState implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private FrameState[] windowStates;
+    FrameState[] windowStates;
 
     public SavedState(JInternalFrame[] frames){
         windowStates = new FrameState[frames.length];
         int count = 0;
         for (JInternalFrame frame : frames){
-            windowStates[count] = new FrameState(frame.getName(), frame.getLocation(), frame.isMaximum());
-            System.out.println(frame.getName());
+            windowStates[count] = new FrameState(frame.getName(), frame.getLocation(), frame.getSize(), frame.isIcon(), (long) count);
             count++;
         }
+    }
+
+    public FrameState[] getWindowStates(){
+        return windowStates;
     }
 
     public void saveFile() throws IOException {
@@ -26,5 +29,12 @@ public class SavedState implements Serializable {
         objectOutputStream.writeObject(this);
 
         objectOutputStream.close();
+    }
+
+    public static SavedState getFile() throws IOException, ClassNotFoundException {
+        FileInputStream fileInputStream = new FileInputStream(System.getProperty("user.dir") + File.separator + "save.ser");
+        ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
+
+        return (SavedState) objectInputStream.readObject();
     }
 }
