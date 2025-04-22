@@ -1,210 +1,275 @@
 package gui;
 
-import java.awt.Color;
-import java.awt.EventQueue;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Point;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import robots.Robot;
+import robots.DefaultRobot;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.File;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.jar.JarFile;
+import java.util.jar.JarEntry;
 import java.awt.geom.AffineTransform;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import javax.swing.JPanel;
+/**
+ * Класс для визуализации игрового поля с роботом и целью.
+ * Реализован с соблюдением принципов SOLID:
+ * - Single Responsibility (разделение ответственности)
+ * - Open/Closed (открытость для расширения, закрытость для изменений)
+ * - Liskov Substitution (работа с абстракцией Robot)
+ * - Interface Segregation (узкоспециализированные интерфейсы)
+ * - Dependency Inversion (зависимость от абстракций)
+ */
+public class GameVisualizer extends JPanel {
+    private static final int REPAINT_DELAY_MS = 50;
+    private static final int MODEL_UPDATE_DELAY_MS = 10;
 
-public class GameVisualizer extends JPanel
-{
-    private final Timer m_timer = initTimer();
-    
-    private static Timer initTimer() 
-    {
-        Timer timer = new Timer("events generator", true);
+    private final Timer repaintTimer;
+    private final Timer modelUpdateTimer;
+    private final JMenuBar robotMenuBar;
+
+    private Robot robot;
+    private Point targetPosition;
+
+    public GameVisualizer() {
+        this.robot = createDefaultRobot();
+        this.targetPosition = new Point(150, 100);
+        this.repaintTimer = createTimer("Repaint Timer", REPAINT_DELAY_MS, this::onRedrawEvent);
+        this.modelUpdateTimer = createTimer("Model Update Timer", MODEL_UPDATE_DELAY_MS, this::onModelUpdateEvent);
+        this.robotMenuBar = createRobotMenuBar();
+
+        initializeUI();
+        startTimers();
+    }
+
+    private Robot createDefaultRobot() {
+        try {
+            return (Robot) Class.forName("robots.DefaultRobot").newInstance();
+        } catch (Exception e) {
+            return new DefaultRobot();
+        }
+    }
+
+    private Timer createTimer(String name, int delay, Runnable action) {
+        Timer timer = new Timer(name, true);
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                action.run();
+            }
+        }, 0, delay);
         return timer;
     }
-    
-    private volatile double m_robotPositionX = 100;
-    private volatile double m_robotPositionY = 100; 
-    private volatile double m_robotDirection = 0; 
 
-    private volatile int m_targetPositionX = 150;
-    private volatile int m_targetPositionY = 100;
-    
-    private static final double maxVelocity = 0.1; 
-    private static final double maxAngularVelocity = 0.001; 
-    
-    public GameVisualizer() 
-    {
-        m_timer.schedule(new TimerTask()
-        {
+    private JMenuBar createRobotMenuBar() {
+        JMenuBar menuBar = new JMenuBar();
+        JMenu robotMenu = new JMenu("Роботы");
+        JMenuItem loadRobotItem = new JMenuItem("Загрузить робота...");
+        loadRobotItem.addActionListener(this::handleLoadRobotAction);
+        robotMenu.add(loadRobotItem);
+        menuBar.add(robotMenu);
+        return menuBar;
+    }
+
+    private void initializeUI() {
+        setDoubleBuffered(true);
+        addMouseListener(new MouseAdapter() {
             @Override
-            public void run()
-            {
-                onRedrawEvent();
-            }
-        }, 0, 50);
-        m_timer.schedule(new TimerTask()
-        {
-            @Override
-            public void run()
-            {
-                onModelUpdateEvent();
-            }
-        }, 0, 10);
-        addMouseListener(new MouseAdapter()
-        {
-            @Override
-            public void mouseClicked(MouseEvent e)
-            {
+            public void mouseClicked(MouseEvent e) {
                 setTargetPosition(e.getPoint());
-                repaint();
             }
         });
-        setDoubleBuffered(true);
     }
 
-    protected void setTargetPosition(Point p)
-    {
-        m_targetPositionX = p.x;
-        m_targetPositionY = p.y;
+    private void startTimers() {
+        repaintTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                onRedrawEvent();
+            }
+        }, 0, REPAINT_DELAY_MS);
+
+        modelUpdateTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                onModelUpdateEvent();
+            }
+        }, 0, MODEL_UPDATE_DELAY_MS);
     }
-    
-    protected void onRedrawEvent()
-    {
+
+    public JMenuBar getRobotMenuBar() {
+        return robotMenuBar;
+    }
+
+    protected void setTargetPosition(Point p) {
+        targetPosition = new Point(p);
+        repaint();
+    }
+
+    protected void onRedrawEvent() {
         EventQueue.invokeLater(this::repaint);
     }
 
-    private static double distance(double x1, double y1, double x2, double y2)
-    {
+    protected void onModelUpdateEvent() {
+        if (shouldStopMoving()) {
+            return;
+        }
+
+        robot.move(targetPosition, MODEL_UPDATE_DELAY_MS);
+    }
+
+    private boolean shouldStopMoving() {
+        return distance(robot.getPositionX(), robot.getPositionY(),
+                targetPosition.x, targetPosition.y) < 0.5;
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        Graphics2D g2d = (Graphics2D) g;
+
+        drawRobot(g2d);
+        drawTarget(g2d);
+    }
+
+    private void drawRobot(Graphics2D g2d) {
+        robot.draw(g2d,
+                round(robot.getPositionX()),
+                round(robot.getPositionY()),
+                robot.getDirection());
+    }
+
+    private void drawTarget(Graphics2D g2d) {
+        AffineTransform t = AffineTransform.getRotateInstance(0, 0, 0);
+        g2d.setTransform(t);
+        g2d.setColor(Color.GREEN);
+        fillOval(g2d, targetPosition.x, targetPosition.y, 5, 5);
+        g2d.setColor(Color.BLACK);
+        drawOval(g2d, targetPosition.x, targetPosition.y, 5, 5);
+    }
+
+    private void handleLoadRobotAction(ActionEvent e) {
+        File jarFile = selectJarFile();
+        if (jarFile != null) {
+            loadRobotFromJar(jarFile);
+        }
+    }
+
+    private File selectJarFile() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileFilter(new JarFileFilter());
+
+        if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            return fileChooser.getSelectedFile();
+        }
+        return null;
+    }
+
+    private void loadRobotFromJar(File jarFile) {
+        try {
+            JarFile jar = new JarFile(jarFile);
+            URLClassLoader classLoader = createClassLoader(jarFile);
+
+            Robot newRobot = findRobotInJar(jar, classLoader);
+            if (newRobot != null) {
+                updateRobot(newRobot);
+            } else {
+                showRobotNotFoundError();
+            }
+        } catch (Exception ex) {
+            showLoadingError(ex);
+        }
+    }
+
+    private URLClassLoader createClassLoader(File jarFile) throws Exception {
+        return new URLClassLoader(
+                new URL[] { jarFile.toURI().toURL() },
+                getClass().getClassLoader()
+        );
+    }
+
+    private Robot findRobotInJar(JarFile jar, URLClassLoader classLoader) throws Exception {
+        for (JarEntry entry : jar.stream().toArray(JarEntry[]::new)) {
+            if (isClassFile(entry)) {
+                Class<?> cls = loadClass(entry, classLoader);
+                if (isRobotClass(cls)) {
+                    return (Robot) cls.newInstance();
+                }
+            }
+        }
+        return null;
+    }
+
+    private boolean isClassFile(JarEntry entry) {
+        return entry.getName().endsWith(".class");
+    }
+
+    private Class<?> loadClass(JarEntry entry, URLClassLoader classLoader) throws Exception {
+        String className = entry.getName()
+                .replace("/", ".")
+                .replace(".class", "");
+        return classLoader.loadClass(className);
+    }
+
+    private boolean isRobotClass(Class<?> cls) {
+        return Robot.class.isAssignableFrom(cls) && !cls.isInterface();
+    }
+
+    private void updateRobot(Robot newRobot) {
+        newRobot.setPosition(robot.getPositionX(), robot.getPositionY());
+        newRobot.setDirection(robot.getDirection());
+        this.robot = newRobot;
+        repaint();
+    }
+
+    private void showRobotNotFoundError() {
+        JOptionPane.showMessageDialog(this,
+                "Не найдено классов роботов в выбранном JAR-файле",
+                "Ошибка", JOptionPane.ERROR_MESSAGE);
+    }
+
+    private void showLoadingError(Exception ex) {
+        JOptionPane.showMessageDialog(this,
+                "Ошибка загрузки робота: " + ex.getMessage(),
+                "Ошибка", JOptionPane.ERROR_MESSAGE);
+    }
+
+    private static double distance(double x1, double y1, double x2, double y2) {
         double diffX = x1 - x2;
         double diffY = y1 - y2;
         return Math.sqrt(diffX * diffX + diffY * diffY);
     }
-    
-    private static double angleTo(double fromX, double fromY, double toX, double toY)
-    {
-        double diffX = toX - fromX;
-        double diffY = toY - fromY;
-        
-        return asNormalizedRadians(Math.atan2(diffY, diffX));
-    }
-    
-    protected void onModelUpdateEvent()
-    {
-        double distance = distance(m_targetPositionX, m_targetPositionY, 
-            m_robotPositionX, m_robotPositionY);
-        if (distance < 0.5)
-        {
-            return;
-        }
-        double velocity = maxVelocity;
-        double angleToTarget = angleTo(m_robotPositionX, m_robotPositionY, m_targetPositionX, m_targetPositionY);
-        double angularVelocity = 0;
-        if (angleToTarget > m_robotDirection)
-        {
-            angularVelocity = maxAngularVelocity;
-        }
-        if (angleToTarget < m_robotDirection)
-        {
-            angularVelocity = -maxAngularVelocity;
-        }
-        
-        moveRobot(velocity, angularVelocity, 10);
-    }
-    
-    private static double applyLimits(double value, double min, double max)
-    {
-        if (value < min)
-            return min;
-        if (value > max)
-            return max;
-        return value;
-    }
-    
-    private void moveRobot(double velocity, double angularVelocity, double duration)
-    {
-        velocity = applyLimits(velocity, 0, maxVelocity);
-        angularVelocity = applyLimits(angularVelocity, -maxAngularVelocity, maxAngularVelocity);
-        double newX = m_robotPositionX + velocity / angularVelocity * 
-            (Math.sin(m_robotDirection  + angularVelocity * duration) -
-                Math.sin(m_robotDirection));
-        if (!Double.isFinite(newX))
-        {
-            newX = m_robotPositionX + velocity * duration * Math.cos(m_robotDirection);
-        }
-        double newY = m_robotPositionY - velocity / angularVelocity * 
-            (Math.cos(m_robotDirection  + angularVelocity * duration) -
-                Math.cos(m_robotDirection));
-        if (!Double.isFinite(newY))
-        {
-            newY = m_robotPositionY + velocity * duration * Math.sin(m_robotDirection);
-        }
-        m_robotPositionX = newX;
-        m_robotPositionY = newY;
-        double newDirection = asNormalizedRadians(m_robotDirection + angularVelocity * duration); 
-        m_robotDirection = newDirection;
-    }
 
-    private static double asNormalizedRadians(double angle)
-    {
-        while (angle < 0)
-        {
-            angle += 2*Math.PI;
-        }
-        while (angle >= 2*Math.PI)
-        {
-            angle -= 2*Math.PI;
-        }
+    private static double asNormalizedRadians(double angle) {
+        while (angle < 0) angle += 2*Math.PI;
+        while (angle >= 2*Math.PI) angle -= 2*Math.PI;
         return angle;
     }
-    
-    private static int round(double value)
-    {
+
+    private static int round(double value) {
         return (int)(value + 0.5);
     }
-    
-    @Override
-    public void paint(Graphics g)
-    {
-        super.paint(g);
-        Graphics2D g2d = (Graphics2D)g; 
-        drawRobot(g2d, round(m_robotPositionX), round(m_robotPositionY), m_robotDirection);
-        drawTarget(g2d, m_targetPositionX, m_targetPositionY);
-    }
-    
-    private static void fillOval(Graphics g, int centerX, int centerY, int diam1, int diam2)
-    {
+
+    private static void fillOval(Graphics g, int centerX, int centerY, int diam1, int diam2) {
         g.fillOval(centerX - diam1 / 2, centerY - diam2 / 2, diam1, diam2);
     }
-    
-    private static void drawOval(Graphics g, int centerX, int centerY, int diam1, int diam2)
-    {
+
+    private static void drawOval(Graphics g, int centerX, int centerY, int diam1, int diam2) {
         g.drawOval(centerX - diam1 / 2, centerY - diam2 / 2, diam1, diam2);
     }
-    
-    private void drawRobot(Graphics2D g, int x, int y, double direction)
-    {
-        int robotCenterX = round(m_robotPositionX); 
-        int robotCenterY = round(m_robotPositionY);
-        AffineTransform t = AffineTransform.getRotateInstance(direction, robotCenterX, robotCenterY); 
-        g.setTransform(t);
-        g.setColor(Color.MAGENTA);
-        fillOval(g, robotCenterX, robotCenterY, 30, 10);
-        g.setColor(Color.BLACK);
-        drawOval(g, robotCenterX, robotCenterY, 30, 10);
-        g.setColor(Color.WHITE);
-        fillOval(g, robotCenterX  + 10, robotCenterY, 5, 5);
-        g.setColor(Color.BLACK);
-        drawOval(g, robotCenterX  + 10, robotCenterY, 5, 5);
+
+    private static class JarFileFilter extends javax.swing.filechooser.FileFilter {
+        public boolean accept(File f) {
+            return f.getName().toLowerCase().endsWith(".jar") || f.isDirectory();
+        }
+
+        public String getDescription() {
+            return "JAR файлы (*.jar)";
+        }
     }
-    
-    private void drawTarget(Graphics2D g, int x, int y)
-    {
-        AffineTransform t = AffineTransform.getRotateInstance(0, 0, 0); 
-        g.setTransform(t);
-        g.setColor(Color.GREEN);
-        fillOval(g, x, y, 5, 5);
-        g.setColor(Color.BLACK);
-        drawOval(g, x, y, 5, 5);
-    }
+
+
 }
