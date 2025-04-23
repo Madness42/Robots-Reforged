@@ -19,6 +19,11 @@ import log.Logger;
 import javax.swing.*;
 import java.awt.event.*;
 
+import java.beans.PropertyVetoException;
+import java.io.IOException;
+import java.util.Objects;
+
+
 /**
  * Что требуется сделать:
  * 1. Метод создания меню перегружен функционалом и трудно читается. 
@@ -28,7 +33,17 @@ import java.awt.event.*;
 public class MainApplicationFrame extends JFrame {
     private final JDesktopPane desktopPane = new JDesktopPane();
 
+    private SavedState savedState;
+
+
     public MainApplicationFrame() {
+        try {
+            this.savedState = SavedState.getFile();
+        }
+        catch (IOException | ClassNotFoundException e){
+            System.out.println(e.getMessage());
+        }
+
         //Make the big window be indented 50 pixels from each edge
         //of the screen.
         int inset = 50;
@@ -43,20 +58,62 @@ public class MainApplicationFrame extends JFrame {
         LogWindow logWindow = createLogWindow();
         addWindow(logWindow);
 
-        GameWindow gameWindow = new GameWindow();
-        gameWindow.setSize(400, 400);
+        GameWindow gameWindow = createGameWindow();
+
         addWindow(gameWindow);
 
         setJMenuBar(generateMenuBar());
         setDefaultCloseOperation(EXIT_ON_CLOSE);
     }
 
+    protected GameWindow createGameWindow() {
+        GameWindow gameWindow = new GameWindow();
+        gameWindow.setName("Game");
+        gameWindow.setLocation(100, 10);
+        gameWindow.setSize(400, 400);
+
+        if (savedState != null){
+            for (FrameState frameState : savedState.getWindowStates()){
+                if (Objects.equals(frameState.getName(), gameWindow.getName())){
+                    try{
+                        gameWindow.setIcon(frameState.getMaximized());
+                    }
+                    catch (PropertyVetoException e){
+                        System.out.println(e.getMessage());
+                    }
+                    gameWindow.setLocation(frameState.getLocation());
+                    gameWindow.setSize(frameState.getSize());
+                }
+            }
+        }
+
+        setMinimumSize(gameWindow.getSize());
+        return gameWindow;
+    }
+
     protected LogWindow createLogWindow() {
         LogWindow logWindow = new LogWindow(Logger.getDefaultLogSource());
+        logWindow.setName("Logger");
         logWindow.setLocation(10, 10);
         logWindow.setSize(300, 800);
+
+        if (savedState != null){
+            for (FrameState frameState : savedState.getWindowStates()){
+                if (Objects.equals(frameState.getName(), logWindow.getName())){
+                    try{
+                        logWindow.setIcon(frameState.getMaximized());
+                    }
+                    catch (PropertyVetoException e){
+                        System.out.println(e.getMessage());
+                    }
+                    logWindow.setLocation(frameState.getLocation());
+                    logWindow.setSize(frameState.getSize());
+                }
+            }
+        }
+
         setMinimumSize(logWindow.getSize());
-        logWindow.pack();
+        //logWindow.pack();
         Logger.debug("Протокол работает");
         return logWindow;
     }
@@ -68,9 +125,15 @@ public class MainApplicationFrame extends JFrame {
     private void approveExitMenu()
     {
         ConfirmInput answer = getSelectedConfirmInput();
-
         if(answer == ConfirmInput.YES)
         {
+            SavedState savedState = new SavedState(desktopPane.getAllFrames());
+            try{
+                savedState.saveFile();
+            }
+            catch (IOException e){
+                System.out.println(e.getMessage());
+            }
             System.exit(0);
         }
     }

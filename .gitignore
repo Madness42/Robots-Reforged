@@ -3,10 +3,6 @@
 /robots/bin
 eclipse.bat
 .gitignore
-/.idea/codeStyles/codeStyleConfig.xml
+/.idea
 out
-/.idea/misc.xml
-/.idea/modules.xml
-/.idea/codeStyles/Project.xml
-/.idea/Robots-Reforged.iml
-/.idea/vcs.xml
+
