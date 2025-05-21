@@ -132,7 +132,6 @@ public class GameVisualizer extends JPanel {
         audio.stopSounds();
         isCarSoundPlaying = false;
     }
-
     private boolean shouldStopMoving() {
         return distance(robot.getPositionX(), robot.getPositionY(),
                 targetPosition.x, targetPosition.y) < 0.5;
