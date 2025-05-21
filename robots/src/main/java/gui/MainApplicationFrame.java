@@ -14,9 +14,12 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
+import audio.AudioPlayer;
 import enums.ConfirmInput;
 import log.Logger;
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import java.awt.event.*;
 
 import java.beans.PropertyVetoException;
@@ -59,7 +62,6 @@ public class MainApplicationFrame extends JFrame {
         addWindow(logWindow);
 
         GameWindow gameWindow = createGameWindow();
-
         addWindow(gameWindow);
 
         setJMenuBar(generateMenuBar());
@@ -113,7 +115,6 @@ public class MainApplicationFrame extends JFrame {
         }
 
         setMinimumSize(logWindow.getSize());
-        //logWindow.pack();
         Logger.debug("Протокол работает");
         return logWindow;
     }
@@ -154,10 +155,12 @@ public class MainApplicationFrame extends JFrame {
         JMenu fileMenu = createFileMenu();
         JMenu lookAndFeelMenu = createLookAndFeelMenu();
         JMenu testMenu = createTestMenu();
+        JMenu settingsMenu = createSettingsMenu();
 
         menuBar.add(fileMenu);
         menuBar.add(lookAndFeelMenu);
         menuBar.add(testMenu);
+        menuBar.add(settingsMenu);
 
         return menuBar;
     }
@@ -170,6 +173,41 @@ public class MainApplicationFrame extends JFrame {
         fileMenu.add(createMenuItem("Выход", KeyEvent.VK_S, event -> approveExitMenu()));
 
         return fileMenu;
+    }
+    private JMenu createSettingsMenu() {
+        JMenu settingsMenu = new JMenu("Настройки");
+        settingsMenu.setMnemonic(KeyEvent.VK_V);
+        settingsMenu.getAccessibleContext().setAccessibleDescription("Настройки программой");
+
+        AudioPlayer audio = AudioPlayer.getInstance();
+
+        JSlider soundSlider = new JSlider(0, 100, 100);
+        soundSlider.setMajorTickSpacing(25);
+        soundSlider.setPaintTicks(true);
+        soundSlider.setPaintLabels(true);
+        soundSlider.setBorder(BorderFactory.createTitledBorder("Громкость звуков"));
+        soundSlider.addChangeListener(new ChangeListener() {
+            public void stateChanged(ChangeEvent e) {
+                audio.setSoundVolume(soundSlider.getValue() / 100.0f);
+            }
+        });
+
+        JSlider musicSlider = new JSlider(0, 100, 100);
+        musicSlider.setMajorTickSpacing(25);
+        musicSlider.setPaintTicks(true);
+        musicSlider.setPaintLabels(true);
+        musicSlider.setBorder(BorderFactory.createTitledBorder("Громкость музыки"));
+
+        musicSlider.addChangeListener(new ChangeListener() {
+            public void stateChanged(ChangeEvent e) {
+                audio.setMusicVolume(musicSlider.getValue() / 100.0f);
+            }
+        });
+
+        settingsMenu.add(musicSlider);
+        settingsMenu.add(soundSlider);
+
+        return settingsMenu;
     }
 
     private JMenu createLookAndFeelMenu() {
