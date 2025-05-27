@@ -1,5 +1,7 @@
 package gui;
 
+import log.Logger;
+
 import java.io.*;
 import javax.swing.*;
 import java.awt.*;
@@ -33,6 +35,7 @@ public class SavedState implements Serializable {
 
     public static SavedState getFile() throws IOException, ClassNotFoundException {
         FileInputStream fileInputStream = new FileInputStream(System.getProperty("user.dir") + File.separator + "save.ser");
+        Logger.debug(System.getProperty("user.dir"));
         ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
 
         return (SavedState) objectInputStream.readObject();

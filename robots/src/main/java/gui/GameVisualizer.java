@@ -1,5 +1,6 @@
 package gui;
 
+import audio.AudioHandler;
 import audio.AudioPlayer;
 import robots.Robot;
 import robots.DefaultRobot;
@@ -125,7 +126,7 @@ public class GameVisualizer extends JPanel {
             return;
         }
         if(isMoving){
-            audio.playSound("step.wav", true);
+            audio.playSound(AudioHandler.CAR_SOUND, true);
             isCarSoundPlaying = true;
             return;
         }

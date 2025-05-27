@@ -3,10 +3,8 @@ package audio;
 import log.Logger;
 
 import javax.sound.sampled.*;
-import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class AudioPlayer {
@@ -26,7 +24,7 @@ public class AudioPlayer {
     }
 
     public AudioPlayer(){
-        playMusic("Music.wav");
+        playMusic(AudioHandler.MUSIC);
         this.sounds = new ArrayList<>();
     }
 
@@ -55,7 +53,6 @@ public class AudioPlayer {
         }
         FloatControl gainControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
         gainControl.setValue(20f * (float) Math.log10(soundVolume));
-        Logger.debug(clip.toString());
         clip.start();
     }
 
@@ -78,7 +75,7 @@ public class AudioPlayer {
 
     private Clip getClip(String name) throws UnsupportedAudioFileException, LineUnavailableException, IOException {
         try {
-            name = "robots\\src\\main\\resourses\\audio\\" + name;
+            name = "robots/src/main/resourses/audio/" + name;
             AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File(name).getAbsoluteFile());
             Clip clip = AudioSystem.getClip();
             clip.open(audioInputStream);

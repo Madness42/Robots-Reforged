@@ -6,10 +6,8 @@ import java.awt.TextArea;
 
 import javax.swing.JInternalFrame;
 import javax.swing.JPanel;
-import javax.swing.event.InternalFrameAdapter;
-import javax.swing.event.InternalFrameEvent;
 
-import audio.AudioPlayer;
+import audio.AudioHandler;
 import log.LogChangeListener;
 import log.LogEntry;
 import log.LogWindowSource;
@@ -31,18 +29,8 @@ public class LogWindow extends JInternalFrame implements LogChangeListener
         panel.add(m_logContent, BorderLayout.CENTER);
         getContentPane().add(panel);
 
-        AudioPlayer audio = AudioPlayer.getInstance();
-        addInternalFrameListener(new InternalFrameAdapter(){
-            public void internalFrameClosing(InternalFrameEvent e) {
-                audio.playSound("nextLevel.wav", false);
-            }
-            public void internalFrameIconified(InternalFrameEvent e){
-                audio.playSound("Restart.wav", false);
-            }
-            public void internalFrameDeiconified(InternalFrameEvent e){
-                audio.playSound("Restart.wav", false);
-            }
-        });
+        AudioHandler.addWindowSounds(this);
+
         pack();
         updateLogContent();
     }
