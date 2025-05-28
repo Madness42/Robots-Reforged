@@ -7,6 +7,7 @@ import java.awt.TextArea;
 import javax.swing.JInternalFrame;
 import javax.swing.JPanel;
 
+import audio.AudioHandler;
 import log.LogChangeListener;
 import log.LogEntry;
 import log.LogWindowSource;
@@ -27,6 +28,9 @@ public class LogWindow extends JInternalFrame implements LogChangeListener
         JPanel panel = new JPanel(new BorderLayout());
         panel.add(m_logContent, BorderLayout.CENTER);
         getContentPane().add(panel);
+
+        AudioHandler.addWindowSounds(this);
+
         pack();
         updateLogContent();
     }

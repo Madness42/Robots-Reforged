@@ -1,5 +1,7 @@
 package gui;
 
+import audio.AudioHandler;
+import audio.AudioPlayer;
 import robots.Robot;
 import robots.DefaultRobot;
 import javax.swing.*;
@@ -14,15 +16,6 @@ import java.awt.geom.AffineTransform;
 import java.util.Timer;
 import java.util.TimerTask;
 
-/**
- * Класс для визуализации игрового поля с роботом и целью.
- * Реализован с соблюдением принципов SOLID:
- * - Single Responsibility (разделение ответственности)
- * - Open/Closed (открытость для расширения, закрытость для изменений)
- * - Liskov Substitution (работа с абстракцией Robot)
- * - Interface Segregation (узкоспециализированные интерфейсы)
- * - Dependency Inversion (зависимость от абстракций)
- */
 public class GameVisualizer extends JPanel {
     private static final int REPAINT_DELAY_MS = 50;
     private static final int MODEL_UPDATE_DELAY_MS = 10;
@@ -34,12 +27,17 @@ public class GameVisualizer extends JPanel {
     private Robot robot;
     private Point targetPosition;
 
+    private final AudioPlayer audio;
+    private boolean isCarSoundPlaying;
+
     public GameVisualizer() {
+        this.audio = AudioPlayer.getInstance();
         this.robot = createDefaultRobot();
         this.targetPosition = new Point(150, 100);
         this.repaintTimer = createTimer("Repaint Timer", REPAINT_DELAY_MS, this::onRedrawEvent);
         this.modelUpdateTimer = createTimer("Model Update Timer", MODEL_UPDATE_DELAY_MS, this::onModelUpdateEvent);
         this.robotMenuBar = createRobotMenuBar();
+
 
         initializeUI();
         startTimers();
@@ -115,12 +113,26 @@ public class GameVisualizer extends JPanel {
 
     protected void onModelUpdateEvent() {
         if (shouldStopMoving()) {
+            handleCarSound(false);
             return;
         }
+        handleCarSound(true);
 
         robot.move(targetPosition, MODEL_UPDATE_DELAY_MS);
     }
 
+    private void handleCarSound(boolean isMoving){
+        if(isCarSoundPlaying == isMoving){
+            return;
+        }
+        if(isMoving){
+            audio.playSound(AudioHandler.CAR_SOUND, true);
+            isCarSoundPlaying = true;
+            return;
+        }
+        audio.stopSounds();
+        isCarSoundPlaying = false;
+    }
     private boolean shouldStopMoving() {
         return distance(robot.getPositionX(), robot.getPositionY(),
                 targetPosition.x, targetPosition.y) < 0.5;

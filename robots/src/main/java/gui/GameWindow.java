@@ -2,6 +2,7 @@ package gui;
 
 import java.awt.BorderLayout;
 
+import audio.AudioHandler;
 import javax.swing.JInternalFrame;
 import javax.swing.JPanel;
 
@@ -16,6 +17,10 @@ public class GameWindow extends JInternalFrame
         panel.add(m_visualizer, BorderLayout.CENTER);
         getContentPane().add(panel);
         setJMenuBar(m_visualizer.getRobotMenuBar());
+
+
+        AudioHandler.addWindowSounds(this);
+
         pack();
     }
 }
