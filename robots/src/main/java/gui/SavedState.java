@@ -34,8 +34,12 @@ public class SavedState implements Serializable {
     }
 
     public static SavedState getFile() throws IOException, ClassNotFoundException {
-        FileInputStream fileInputStream = new FileInputStream(System.getProperty("user.dir") + File.separator + "save.ser");
-        Logger.debug(System.getProperty("user.dir"));
+        File file = new File(System.getProperty("user.dir") + File.separator + "save.ser");
+        if(!file.exists())
+        {
+            file.createNewFile();
+        }
+        FileInputStream fileInputStream = new FileInputStream(file);
         ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
 
         return (SavedState) objectInputStream.readObject();

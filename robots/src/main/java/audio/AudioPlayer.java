@@ -9,6 +9,7 @@ import java.util.ArrayList;
 
 public class AudioPlayer {
     private static AudioPlayer instance;
+    private String CLIPS_PATH = "robots/src/main/resourses/audio/";
 
     Clip music;
     ArrayList<Clip> sounds;
@@ -75,8 +76,8 @@ public class AudioPlayer {
 
     private Clip getClip(String name) throws UnsupportedAudioFileException, LineUnavailableException, IOException {
         try {
-            name = "robots/src/main/resourses/audio/" + name;
-            AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File(name).getAbsoluteFile());
+            String clipName = CLIPS_PATH + name;
+            AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File(clipName).getAbsoluteFile());
             Clip clip = AudioSystem.getClip();
             clip.open(audioInputStream);
             return clip;
